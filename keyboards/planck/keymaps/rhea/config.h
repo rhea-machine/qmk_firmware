@@ -19,5 +19,6 @@
 #ifdef AUDIO_ENABLE
 #    define ONE_UP_SOUND Q__NOTE(_E6 ), Q__NOTE(_G6 ), Q__NOTE(_E7 ), Q__NOTE(_C7 ), Q__NOTE(_D7 ), Q__NOTE(_G7 )
 #    define STARTUP_SONG SONG(ONE_UP_SOUND)
+#    define DEFAULT_LAYER_SONGS { SONG(QWERTY_SOUND), SONG(DVORAK_SOUND) }
 #endif
 

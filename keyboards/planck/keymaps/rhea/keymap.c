@@ -20,6 +20,7 @@
 
 enum planck_layers {
     _QWERTZ,
+    _GAMING,
     _LOWER,
     _RAISE,
     _ADJUST
@@ -31,6 +32,9 @@ enum custom_keycodes {
 
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
+
+#define QWERTZ PDF(_QWERTZ)
+#define GAMING PDF(_GAMING)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -50,6 +54,24 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,  CH_A,    CH_S,    CH_D,    CH_F,    CH_G,    CH_H,    CH_J,    CH_K,    CH_L,    RH_QUES, CH_DLR,
         KC_LSFT, CH_Y,    CH_X,    CH_C,    CH_V,    CH_B,    CH_N,    CH_M,    CH_COMM, CH_DOT,  CH_MINS, KC_RSFT,
         KC_LCTL, CH_LABK, KC_LGUI, KC_LALT, LOWER,   KC_ENT,  KC_SPC,  RAISE,   KC_RALT, KC_RGUI, _______, KC_RCTL
+    ),
+
+    /* GAMING
+     * ,-----------------------------------------------------------------------------------.
+     * |      |      |      |      |      |      |      |  7   |  8   |  9   |      |      |
+     * |------+------+------+------+------+------+------+------+------+------+------+------|
+     * |      |      |      |      |      |      |      |  4   |  5   |  6   |      |      |
+     * |------+------+------+------+------+------+------+------+------+------+------+------|
+     * |      |      |      |      |      |      |  0   |  1   |  2   |  3   |      |      |
+     * |------+------+------+------+------+------+------+------+------+------+------+------|
+     * |      |      |      |SPACE |SPACE |      |      |      |      |      |QWERTZ|      |
+     * `-----------------------------------------------------------------------------------'
+     */
+    [_GAMING] = LAYOUT_planck_grid(
+        _______, _______, _______, _______, _______, _______, _______, KC_P7,   KC_P8,   KC_P9,   _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, KC_P4,   KC_P5,   KC_P6,   _______, _______,
+        _______, _______, _______, _______, _______, _______, KC_P0,   KC_P1,   KC_P2,   KC_P3,   _______, _______,
+        _______, _______, _______, KC_SPC,  KC_SPC,  _______, _______, _______, _______, _______, QWERTZ,  _______
     ),
 
     /* LOWER
@@ -90,9 +112,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* ADJUST
      * ,-----------------------------------------------------------------------------------.
-     * |      |RESET |DEBUG |RGB   |RGBMOD|HUE-  |HUE+  |SAT-  |SAT+  |BRGHT-|BRGHT+|      |
+     * |      |RESET |DEBUG |RGB   |      |SAT-  |SAT+  |HUE-  |HUE+  |BRGHT-|BRGHT+|      |
      * |------+------+------+------+------+------+------+------+------+------+------+------|
-     * |      |      |      |AUDON |AUDOFF|      |      |      |      |      |      |      |
+     * |      |      |      |AUDON |AUDOFF|      |      |GAMING|      |      |      |      |
      * |------+------+------+------+------+------+------+------+------+------+------+------|
      * |      |      |      |      |      |      |      |      |      |      |      |      |
      * |------+------+------+------+------+------+------+------+------+------+------+------|
@@ -100,8 +122,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * `-----------------------------------------------------------------------------------'
      */
     [_ADJUST] = LAYOUT_planck_grid(
-        _______, QK_BOOT, DB_TOGG, UG_TOGG, UG_NEXT, UG_HUED, UG_HUEU, UG_SATD, UG_SATU, UG_VALD, UG_VALU, _______,
-        _______, _______, _______, AU_ON,   AU_OFF,  _______, _______, _______, _______, _______, _______, _______,
+        _______, QK_BOOT, DB_TOGG, UG_TOGG, _______, UG_SATD, UG_SATU, UG_HUED, UG_HUEU, UG_VALD, UG_VALU, _______,
+        _______, _______, _______, AU_ON,   AU_OFF,  _______, _______, GAMING,  _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
     ),
@@ -114,22 +136,24 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
 
-    case RH_QUES:
-        if (record->event.pressed) {
-            if (get_mods() & MOD_MASK_SHIFT) {
-                register_code(CH_DIAE);
+        // Custom behaviour for `?` (SHIFT + `?` -> `!`)
+        case RH_QUES:
+            if (record->event.pressed) {
+                if (get_mods() & MOD_MASK_SHIFT) {
+                    register_code(CH_DIAE);
+                } else {
+                    register_mods(MOD_BIT(KC_LSFT));
+                    register_code(CH_QUOT);
+                }
             } else {
-                register_mods(MOD_BIT(KC_LSFT));
-                register_code(CH_QUOT);
+                unregister_mods(MOD_BIT(KC_LSFT));
+                unregister_code(CH_DIAE);
+                unregister_code(CH_QUOT);
             }
-        } else {
-            unregister_mods(MOD_BIT(KC_LSFT));
-            unregister_code(CH_DIAE);
-            unregister_code(CH_QUOT);
-        }
-        return false;
-    }
+            return false;
+            break;
 
+    }
     return true;
 };
 
